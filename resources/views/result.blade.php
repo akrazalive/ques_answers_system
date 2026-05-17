@@ -3,16 +3,27 @@
 @section('title', 'Your Result')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-12 col-sm-10 col-md-9 col-lg-8">
 
-        <div class="text-center mb-4">
-            <div class="display-1 mb-2">🏆</div>
-            <h1 class="h3 fw-bold">Quiz Complete, {{ $user->name }}!</h1>
-            <p class="text-muted">Here's how you did.</p>
-        </div>
+{{-- Page header --}}
+<div class="text-center mb-4">
+    <div class="display-1 mb-2">🏆</div>
+    <h1 class="h3 fw-bold">Quiz Complete, {{ $user->name }}!</h1>
+    <p class="text-muted">Here's how you did.</p>
+</div>
+
+{{-- Two-column layout on desktop: left = results, right = leaderboard --}}
+<div class="row g-4 align-items-start">
+
+    {{-- ── LEFT COLUMN — personal results ── --}}
+    <div class="col-12 col-lg-7">
 
         {{-- Summary stat cards --}}
+        @php
+            $total      = $summary->total ?: 1;
+            $pct        = round(($summary->correct / $total) * 100);
+            $marksScore = $summary->correct * 10;
+            $maxScore   = $total * 10;
+        @endphp
         <div class="row g-3 mb-4">
             <div class="col-4">
                 <div class="stat-card" style="background: #16a34a;">
@@ -35,12 +46,6 @@
         </div>
 
         {{-- Score bar --}}
-        @php
-            $total      = $summary->total ?: 1;
-            $pct        = round(($summary->correct / $total) * 100);
-            $marksScore = $summary->correct * 10;
-            $maxScore   = $total * 10;
-        @endphp
         <div class="card p-3 mb-4">
             <div class="d-flex justify-content-between small fw-semibold mb-1">
                 <span>Score</span>
@@ -59,8 +64,8 @@
             <div class="text-end small text-muted mt-1">{{ $pct }}%</div>
         </div>
 
-        {{-- Detailed breakdown --}}
-        <div class="card p-4 mb-4">
+        {{-- Question breakdown --}}
+        <div class="card p-4">
             <h2 class="h6 fw-bold mb-3">Question Breakdown</h2>
 
             @foreach ($details as $i => $row)
@@ -97,43 +102,50 @@
             @endforeach
         </div>
 
+    </div>{{-- end left column --}}
+
+    {{-- ── RIGHT COLUMN — take quiz button + leaderboard ── --}}
+    <div class="col-12 col-lg-5">
+
+        {{-- Take Quiz button — sits above the leaderboard --}}
+        <div class="d-grid mb-3">
+            <a href="{{ route('welcome') }}" class="btn btn-primary btn-lg">
+                <i class="bi bi-pencil-square me-2"></i>Take Quiz
+            </a>
+        </div>
+
         {{-- Leaderboard --}}
         @if ($leaderboard->isNotEmpty())
-        <div class="card p-4 mb-4">
+        <div class="card p-4">
             <h2 class="h6 fw-bold mb-3">
-                <i class="bi bi-trophy-fill text-warning me-2"></i>Leaderboard — Recent Players
+                <i class="bi bi-trophy-fill text-warning me-2"></i>Leaderboard
             </h2>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" style="font-size:.875rem;">
                     <thead class="table-light">
                         <tr>
-                            <th style="width:2.5rem">#</th>
+                            <th style="width:2rem">#</th>
                             <th>Name</th>
-                            <th class="text-center text-success">Correct</th>
-                            <th class="text-center text-danger">Wrong</th>
-                            <th class="text-center text-warning">Skipped</th>
-                            <th class="text-center">Total Q</th>
-                            <th class="text-center">Score</th>
+                            <th class="text-center text-success" title="Correct">✔</th>
+                            <th class="text-center text-danger"  title="Wrong">✘</th>
+                            <th class="text-center text-warning" title="Skipped">⏭</th>
+                            <th class="text-center fw-bold">Score</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($leaderboard as $rank => $row)
                             <tr class="{{ $row->name === $user->name ? 'table-primary fw-semibold' : '' }}">
-                                <td>
-                                    @if ($rank === 0)
-                                        <span title="1st">🥇</span>
-                                    @elseif ($rank === 1)
-                                        <span title="2nd">🥈</span>
-                                    @elseif ($rank === 2)
-                                        <span title="3rd">🥉</span>
-                                    @else
-                                        {{ $rank + 1 }}
+                                <td class="text-center">
+                                    @if ($rank === 0) 🥇
+                                    @elseif ($rank === 1) 🥈
+                                    @elseif ($rank === 2) 🥉
+                                    @else {{ $rank + 1 }}
                                     @endif
                                 </td>
                                 <td>
                                     {{ $row->name }}
                                     @if ($row->name === $user->name)
-                                        <span class="badge bg-primary ms-1" style="font-size:.7rem;">You</span>
+                                        <span class="badge bg-primary ms-1" style="font-size:.65rem;">You</span>
                                     @endif
                                 </td>
                                 <td class="text-center">
@@ -145,28 +157,23 @@
                                 <td class="text-center">
                                     <span class="badge bg-warning text-dark rounded-pill">{{ $row->skipped }}</span>
                                 </td>
-                                <td class="text-center text-muted">{{ $row->total }}</td>
                                 <td class="text-center">
                                     <span class="fw-bold" style="color: var(--primary);">{{ $row->score }}</span>
-                                    <span class="text-muted small"> pts</span>
+                                    <span class="text-muted" style="font-size:.75rem;"> pts</span>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-            <p class="text-muted small mt-2 mb-0">
-                <i class="bi bi-info-circle me-1"></i>Each correct answer = 10 points. Only completed quizzes are shown.
+            <p class="text-muted mt-2 mb-0" style="font-size:.78rem;">
+                <i class="bi bi-info-circle me-1"></i>10 pts per correct answer. Completed quizzes only.
             </p>
         </div>
         @endif
 
-        <div class="text-center">
-            <a href="{{ route('welcome') }}" class="btn btn-primary btn-lg px-5">
-                <i class="bi bi-arrow-repeat me-1"></i> Play Again
-            </a>
-        </div>
+    </div>{{-- end right column --}}
 
-    </div>
-</div>
+</div>{{-- end row --}}
+
 @endsection
