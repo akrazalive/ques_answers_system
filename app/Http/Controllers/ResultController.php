@@ -51,6 +51,25 @@ class ResultController extends Controller
         // Clear session after viewing result
         session()->forget('user_id');
 
-        return view('result', compact('user', 'summary', 'details'));
+        // Leaderboard — all users who completed the quiz, ranked by score DESC
+        // Score = correct answers × 10 marks each
+        // Uses SQL aggregate functions: SUM, COUNT, MAX
+        $leaderboard = DB::table('results AS r')
+                         ->join('users AS u', 'u.id', '=', 'r.user_id')
+                         ->groupBy('r.user_id', 'u.name')
+                         ->havingRaw('COUNT(r.id) = (SELECT COUNT(*) FROM questions)')
+                         ->selectRaw('
+                             u.name,
+                             COUNT(r.id)                                                    AS total,
+                             SUM(CASE WHEN r.status = "correct"  THEN 1 ELSE 0 END)        AS correct,
+                             SUM(CASE WHEN r.status = "wrong"    THEN 1 ELSE 0 END)        AS wrong,
+                             SUM(CASE WHEN r.status = "skipped"  THEN 1 ELSE 0 END)        AS skipped,
+                             SUM(CASE WHEN r.status = "correct"  THEN 10 ELSE 0 END)       AS score
+                         ')
+                         ->orderByDesc('score')
+                         ->orderBy('u.name')
+                         ->get();
+
+        return view('result', compact('user', 'summary', 'details', 'leaderboard'));
     }
 }

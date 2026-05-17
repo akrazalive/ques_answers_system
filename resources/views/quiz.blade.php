@@ -56,7 +56,13 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="button" id="btn-skip" class="btn btn-outline-secondary flex-fill">
+                    <button
+                        type="button"
+                        id="btn-skip"
+                        class="btn btn-outline-secondary flex-fill"
+                        {{ $remaining === 1 ? 'disabled' : '' }}
+                        title="{{ $remaining === 1 ? 'Cannot skip the last question' : 'Skip this question' }}"
+                    >
                         <i class="bi bi-skip-forward me-1"></i> Skip
                     </button>
                     <button type="button" id="btn-next" class="btn btn-primary flex-fill">
@@ -144,11 +150,21 @@
         attachOptionListeners();
 
         // doneCount was incremented in submitAndAdvance before this call
-        const currentQ = doneCount + 1;
-        const pct      = Math.round((doneCount / totalQuestions) * 100);
+        const currentQ  = doneCount + 1;
+        const pct       = Math.round((doneCount / totalQuestions) * 100);
         document.getElementById('progress-bar').style.width = pct + '%';
         document.getElementById('q-done').textContent       = currentQ;
         document.getElementById('q-remaining').textContent  = data.remaining + ' remaining';
+
+        // Disable skip on the last question (remaining === 0 means this IS the last one)
+        const btnSkip = document.getElementById('btn-skip');
+        if (data.remaining === 0) {
+            btnSkip.disabled = true;
+            btnSkip.title    = 'Cannot skip the last question';
+        } else {
+            btnSkip.disabled = false;
+            btnSkip.title    = 'Skip this question';
+        }
     }
 
     // ── Highlight selected option ─────────────────────────────────────────────

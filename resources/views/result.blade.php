@@ -36,13 +36,15 @@
 
         {{-- Score bar --}}
         @php
-            $total = $summary->total ?: 1;
-            $pct   = round(($summary->correct / $total) * 100);
+            $total      = $summary->total ?: 1;
+            $pct        = round(($summary->correct / $total) * 100);
+            $marksScore = $summary->correct * 10;
+            $maxScore   = $total * 10;
         @endphp
         <div class="card p-3 mb-4">
             <div class="d-flex justify-content-between small fw-semibold mb-1">
                 <span>Score</span>
-                <span>{{ $summary->correct }} / {{ $summary->total }}</span>
+                <span>{{ $marksScore }} / {{ $maxScore }} pts &nbsp;·&nbsp; {{ $summary->correct }} correct of {{ $summary->total }}</span>
             </div>
             <div class="progress" style="height:12px;">
                 <div
@@ -94,6 +96,70 @@
                 </div>
             @endforeach
         </div>
+
+        {{-- Leaderboard --}}
+        @if ($leaderboard->isNotEmpty())
+        <div class="card p-4 mb-4">
+            <h2 class="h6 fw-bold mb-3">
+                <i class="bi bi-trophy-fill text-warning me-2"></i>Leaderboard — Recent Players
+            </h2>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:2.5rem">#</th>
+                            <th>Name</th>
+                            <th class="text-center text-success">Correct</th>
+                            <th class="text-center text-danger">Wrong</th>
+                            <th class="text-center text-warning">Skipped</th>
+                            <th class="text-center">Total Q</th>
+                            <th class="text-center">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($leaderboard as $rank => $row)
+                            <tr class="{{ $row->name === $user->name ? 'table-primary fw-semibold' : '' }}">
+                                <td>
+                                    @if ($rank === 0)
+                                        <span title="1st">🥇</span>
+                                    @elseif ($rank === 1)
+                                        <span title="2nd">🥈</span>
+                                    @elseif ($rank === 2)
+                                        <span title="3rd">🥉</span>
+                                    @else
+                                        {{ $rank + 1 }}
+                                    @endif
+                                </td>
+                                <td>
+                                    {{ $row->name }}
+                                    @if ($row->name === $user->name)
+                                        <span class="badge bg-primary ms-1" style="font-size:.7rem;">You</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success rounded-pill">{{ $row->correct }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger rounded-pill">{{ $row->wrong }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning text-dark rounded-pill">{{ $row->skipped }}</span>
+                                </td>
+                                <td class="text-center text-muted">{{ $row->total }}</td>
+                                <td class="text-center">
+                                    <span class="fw-bold" style="color: var(--primary);">{{ $row->score }}</span>
+                                    <span class="text-muted small"> pts</span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-muted small mt-2 mb-0">
+                <i class="bi bi-info-circle me-1"></i>Each correct answer = 10 points. Only completed quizzes are shown.
+            </p>
+        </div>
+        @endif
 
         <div class="text-center">
             <a href="{{ route('welcome') }}" class="btn btn-primary btn-lg px-5">
