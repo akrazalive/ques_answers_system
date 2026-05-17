@@ -76,10 +76,10 @@ class QuizController extends Controller
                      ->where('question_id', $question->id)
                      ->get(['id', 'answer_text']);
 
-        // Use SQL COUNT to get remaining count
+        // Remaining = total unanswered minus the one we just fetched to display
         $remaining = DB::table('questions')
                        ->whereNotIn('id', $answeredIds)
-                       ->count();
+                       ->count() - 1;
 
         return response()->json([
             'finished'  => false,
@@ -88,7 +88,7 @@ class QuizController extends Controller
                 'text' => $question->question_text,
             ],
             'answers'   => $answers,
-            'remaining' => $remaining,
+            'remaining' => max(0, $remaining),
         ]);
     }
 }

@@ -123,7 +123,7 @@
     // ── Render a new question ─────────────────────────────────────────────────
 
     function renderQuestion(data) {
-        document.getElementById('question-id').value   = data.question.id;
+        document.getElementById('question-id').value        = data.question.id;
         document.getElementById('question-text').textContent = data.question.text;
 
         const container = document.getElementById('answers-container');
@@ -143,11 +143,11 @@
         // Re-attach highlight listeners
         attachOptionListeners();
 
-        // Update progress
-        doneCount++;
-        const pct = Math.round((doneCount / totalQuestions) * 100);
+        // doneCount was incremented in submitAndAdvance before this call
+        const currentQ = doneCount + 1;
+        const pct      = Math.round((doneCount / totalQuestions) * 100);
         document.getElementById('progress-bar').style.width = pct + '%';
-        document.getElementById('q-done').textContent       = doneCount + 1;
+        document.getElementById('q-done').textContent       = currentQ;
         document.getElementById('q-remaining').textContent  = data.remaining + ' remaining';
     }
 
@@ -179,6 +179,8 @@
                     return;
                 }
 
+                // Increment after answer saved, before rendering next question
+                doneCount++;
                 renderQuestion(data);
 
                 if (answerId === null) {
